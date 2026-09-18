@@ -11,14 +11,15 @@ interface LoadingStateProps {
 }
 
 const STATUS_MESSAGES = [
-  'Uploading to Supabase...',
-  'Authenticating IBM Bob...',
-  'Agent analyzing architecture...',
+  'Uploading to secure storage...',
+  'Authenticating with IBM Bob...',
+  'IBM Bob analyzing architecture...',
   'Indexing dependencies and tech stack...',
-  'Drafting summary...',
+  'Scanning for security vulnerabilities...',
+  'Drafting executive summary...',
 ];
 
-export function LoadingState({ fileName, onComplete, duration = 4500 }: LoadingStateProps) {
+export function LoadingState({ fileName, onComplete, duration = 5000 }: LoadingStateProps) {
   const [progress, setProgress] = useState(0);
   const [currentStatus, setCurrentStatus] = useState(0);
 
@@ -53,39 +54,39 @@ export function LoadingState({ fileName, onComplete, duration = 4500 }: LoadingS
       className="flex w-full max-w-2xl flex-col items-center"
     >
       <div className="mb-8 flex items-center gap-3">
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/10">
-          <Terminal className="h-5 w-5 text-violet-400" />
+        <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/50">
+          <Terminal className="h-5 w-5 text-slate-300" />
           <motion.div
-            className="absolute inset-0 rounded-xl border border-violet-500/40"
+            className="absolute inset-0 rounded-xl border border-slate-600"
             animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
         <div className="text-left">
-          <p className="text-sm font-medium text-zinc-200">IBM Bob is analyzing</p>
-          <p className="text-xs text-zinc-500 truncate max-w-[200px]">{fileName}</p>
+          <p className="text-sm font-medium text-slate-200">IBM Bob is analyzing</p>
+          <p className="max-w-[200px] truncate text-xs text-slate-500">{fileName}</p>
         </div>
       </div>
 
       <div className="w-full">
-        <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
+        <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
           <span>Processing</span>
-          <span className="font-mono tabular-nums text-violet-400">
+          <span className="font-mono tabular-nums text-slate-300">
             {Math.round(progress)}%
           </span>
         </div>
-        <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-zinc-800">
+        <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-slate-800">
           <motion.div
-            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"
+            className="absolute left-0 top-0 h-full rounded-full bg-slate-300"
             style={{ width: `${progress}%` }}
             transition={{ ease: 'linear' }}
           >
-            <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-r from-transparent to-violet-400/50 blur-sm" />
+            <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-r from-transparent to-slate-200/50 blur-sm" />
           </motion.div>
         </div>
       </div>
 
-      <div className="mt-8 w-full rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 font-mono text-xs">
+      <div className="mt-8 w-full rounded-xl border border-slate-800 bg-slate-900/50 p-5 font-mono text-xs">
         <AnimatePresence mode="wait">
           {STATUS_MESSAGES.slice(0, currentStatus + 1).map((msg, idx) => (
             <motion.div
@@ -96,19 +97,19 @@ export function LoadingState({ fileName, onComplete, duration = 4500 }: LoadingS
               className="flex items-center gap-2.5 py-1.5"
             >
               {idx < currentStatus ? (
-                <Check className="h-3.5 w-3.5 text-green-500" />
+                <Check className="h-3.5 w-3.5 text-emerald-500" />
               ) : (
                 <motion.div
-                  className="h-3.5 w-3.5 flex items-center justify-center"
+                  className="flex h-3.5 w-3.5 items-center justify-center"
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.2, repeat: Infinity }}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                 </motion.div>
               )}
               <span
                 className={
-                  idx < currentStatus ? 'text-zinc-600' : 'text-zinc-300'
+                  idx < currentStatus ? 'text-slate-600' : 'text-slate-300'
                 }
               >
                 {msg}

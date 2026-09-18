@@ -46,6 +46,11 @@ export default function Home() {
           tech_stack: data.techStack,
           architecture: data.architecture,
           file_tree: data.fileTree,
+          executive_overview: data.executiveOverview ?? null,
+          security_findings: data.securityFindings ?? null,
+          api_endpoints: data.apiEndpoints ?? null,
+          tech_debt_metrics: data.techDebtMetrics ?? null,
+          recommended_refactor: data.recommendedRefactor ?? null,
         });
       } catch {
         // Supabase persistence is best-effort; UI works without it
@@ -82,7 +87,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
       <AnimatePresence mode="wait">
@@ -101,22 +106,20 @@ export default function Home() {
               transition={{ duration: 0.6, ease: 'easeOut' }}
               className="mb-12 text-center"
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3.5 py-1.5 text-xs text-zinc-400">
-                <Sparkles className="h-3 w-3 text-violet-400" />
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-3.5 py-1.5 text-xs text-slate-400">
+                <Sparkles className="h-3 w-3 text-slate-300" />
                 Enterprise AI Code Intelligence
               </div>
-              <h1 className="mb-4 font-sans text-4xl font-medium tracking-tight text-zinc-100 sm:text-5xl md:text-6xl">
-                Understand Any Codebase
+              <h1 className="mb-4 font-sans text-4xl font-medium tracking-tight text-slate-100 sm:text-5xl md:text-6xl">
+                Understand Any Codebase.
                 <br />
-                with{' '}
-                <span className="bg-gradient-to-r from-violet-400 to-violet-500 bg-clip-text text-transparent">
-                  IBM Bob
-                </span>
+                <span className="text-slate-400">Powered by </span>
+                <span className="font-semibold text-slate-200">IBM Bob</span>
               </h1>
-              <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400">
+              <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-500">
                 Upload your project and let our enterprise AI agent generate a
-                deep-dive analysis of architecture, tech stack, and project
-                intent in seconds.
+                deep-dive analysis of architecture, tech stack, security
+                posture, and project intent in seconds.
               </p>
             </motion.div>
 
@@ -126,12 +129,12 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-16 flex items-center gap-6 text-xs text-zinc-600"
+              className="mt-16 flex items-center gap-6 text-xs text-slate-600"
             >
               <span>Supports ZIP archives</span>
-              <span className="h-3 w-px bg-zinc-800" />
+              <span className="h-3 w-px bg-slate-800" />
               <span>package.json parsing</span>
-              <span className="h-3 w-px bg-zinc-800" />
+              <span className="h-3 w-px bg-slate-800" />
               <span>Config file analysis</span>
             </motion.div>
           </motion.main>
@@ -156,13 +159,13 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-zinc-800/40 bg-zinc-950/60 py-3 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 text-xs text-zinc-600">
-          <span>CodeLens AI</span>
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-slate-800/40 bg-slate-950/60 py-3 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 text-xs text-slate-600">
+          <span>dCode</span>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-              IBM Bob Online
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Powered by IBM Bob
             </span>
           </div>
         </div>

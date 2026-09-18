@@ -1,5 +1,14 @@
 import { NextResponse } from 'next/server';
-import type { AnalysisData, TechStackItem, ArchitectureMetric } from '@/lib/types';
+import type {
+  AnalysisData,
+  TechStackItem,
+  ArchitectureMetric,
+  ExecutiveOverview,
+  SecurityFinding,
+  ApiEndpoint,
+  TechDebtMetric,
+  CodeDiff,
+} from '@/lib/types';
 import { mockAnalysisData } from '@/lib/mockData';
 
 export const runtime = 'nodejs';
@@ -24,7 +33,16 @@ Return a JSON object with this exact shape:
   "summary": "A detailed 3-5 sentence paragraph explaining what this project does, its architecture, and its primary use case.",
   "techStack": [{ "name": "string", "category": "language|framework|database|tooling|runtime|library" }],
   "architecture": [{ "label": "string", "value": "string", "description": "string (optional)" }],
-  "fileTree": "A monospaced text representation of the project folder structure"
+  "fileTree": "A monospaced text representation of the project folder structure",
+  "executiveOverview": {
+    "corePurpose": "string",
+    "architectureNarrative": "string",
+    "keyFeatures": ["string"]
+  },
+  "securityFindings": [{ "severity": "critical|warning|info|success", "title": "string", "description": "string", "detail": "string (optional)" }],
+  "apiEndpoints": [{ "method": "GET|POST|PUT|DELETE|PATCH", "path": "string", "purpose": "string" }],
+  "techDebtMetrics": [{ "label": "string", "value": "number", "max": "number", "unit": "string", "description": "string", "status": "good|warning|critical" }],
+  "recommendedRefactor": { "title": "string", "description": "string", "beforeCode": "string", "afterCode": "string", "language": "string" }
 }`;
 }
 
@@ -56,7 +74,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${bobApiKey}`,
-        'X-Agent': 'codeLens',
+        'X-Agent': 'dCode',
       },
       body: JSON.stringify({
         prompt,
@@ -85,6 +103,11 @@ export async function POST(request: Request) {
       techStack: (bobData.techStack || []) as TechStackItem[],
       architecture: (bobData.architecture || []) as ArchitectureMetric[],
       fileTree: bobData.fileTree || '',
+      executiveOverview: (bobData.executiveOverview || undefined) as ExecutiveOverview | undefined,
+      securityFindings: (bobData.securityFindings || undefined) as SecurityFinding[] | undefined,
+      apiEndpoints: (bobData.apiEndpoints || undefined) as ApiEndpoint[] | undefined,
+      techDebtMetrics: (bobData.techDebtMetrics || undefined) as TechDebtMetric[] | undefined,
+      recommendedRefactor: (bobData.recommendedRefactor || undefined) as CodeDiff | undefined,
     };
 
     return NextResponse.json(analysisData, { status: 200 });

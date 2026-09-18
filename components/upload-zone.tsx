@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, FileArchive, Package, FileJson } from 'lucide-react';
+import { CloudUpload as UploadCloud, FileArchive, Package, FileJson } from 'lucide-react';
 
 interface UploadZoneProps {
   onFileSelected: (file: File) => void;
@@ -65,8 +65,8 @@ export function UploadZone({ onFileSelected }: UploadZoneProps) {
           p-12 text-center transition-all duration-300
           ${
             isDragging
-              ? 'border-violet-500 bg-violet-500/5 scale-[1.01]'
-              : 'border-zinc-800 bg-zinc-900/30 hover:border-zinc-700'
+              ? 'border-slate-500 bg-slate-800/10 scale-[1.01]'
+              : 'border-slate-800 bg-slate-900/30 hover:border-slate-700'
           }
         `}
       >
@@ -76,22 +76,22 @@ export function UploadZone({ onFileSelected }: UploadZoneProps) {
             border transition-all duration-300
             ${
               isDragging
-                ? 'border-violet-500/50 bg-violet-500/10'
-                : 'border-zinc-800 bg-zinc-900 group-hover:border-zinc-700'
+                ? 'border-slate-600 bg-slate-800/30'
+                : 'border-slate-800 bg-slate-900 group-hover:border-slate-700'
             }
           `}
         >
           <UploadCloud
             className={`h-7 w-7 transition-colors duration-300 ${
-              isDragging ? 'text-violet-400' : 'text-zinc-500 group-hover:text-zinc-400'
+              isDragging ? 'text-slate-300' : 'text-slate-500 group-hover:text-slate-400'
             }`}
           />
         </div>
 
-        <p className="mb-1.5 font-sans text-base font-medium tracking-tight text-zinc-100">
+        <p className="mb-1.5 font-sans text-base font-medium tracking-tight text-slate-100">
           {isDragging ? 'Drop your file here' : 'Drag & drop your codebase'}
         </p>
-        <p className="mb-6 text-sm text-zinc-500">
+        <p className="mb-6 text-sm text-slate-500">
           or click to browse — ZIP, package.json, or config files
         </p>
 
@@ -103,7 +103,7 @@ export function UploadZone({ onFileSelected }: UploadZoneProps) {
           ].map(({ icon: Icon, label }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1 text-xs text-zinc-400"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/50 px-3 py-1 text-xs text-slate-400"
             >
               <Icon className="h-3 w-3" />
               {label}
@@ -127,7 +127,7 @@ export function UploadZone({ onFileSelected }: UploadZoneProps) {
         <p className="mt-4 text-center text-sm text-red-400">{error}</p>
       )}
 
-      <p className="mt-4 text-center text-xs text-zinc-600">
+      <p className="mt-4 text-center text-xs text-slate-600">
         Files are processed securely. Maximum size 50MB.
       </p>
     </motion.div>
