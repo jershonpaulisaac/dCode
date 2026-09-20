@@ -158,7 +158,6 @@ export async function POST(request: Request) {
     let bobResponse: Response;
     
     try {
-      // 1. Updated fetch call for OpenAI compatibility
       bobResponse = await fetch(inferenceUrl, {
         method: 'POST',
         headers: {
@@ -170,10 +169,15 @@ export async function POST(request: Request) {
           model: 'premium',
           messages: [
             {
+              role: 'system',
+              content: 'You are an AI code analysis engine that only outputs valid JSON.'
+            },
+            {
               role: 'user',
               content: buildBobPrompt(uploadedFile.name, tree, content)
             }
-          ]
+          ],
+          response_format: { type: 'json_object' }
         }),
       });
     } catch (error) {
@@ -192,12 +196,10 @@ export async function POST(request: Request) {
 
     const jsonResponse = await bobResponse.json();
     
-    // 2. Parse the inner JSON from the AI's message content
     let rawContent = jsonResponse;
     if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
         try {
             let cleanedContent = jsonResponse.choices[0].message.content.trim();
-            // Remove markdown codeblock formatting if the AI added it
             if (cleanedContent.startsWith('```json')) {
                 cleanedContent = cleanedContent.replace(/^```json\n/, '').replace(/\n```$/, '');
             } else if (cleanedContent.startsWith('```')) {
