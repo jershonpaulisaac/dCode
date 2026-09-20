@@ -5,11 +5,11 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'dCode — Understand Any Codebase with IBM Bob',
+  title: 'CodeLens AI — Understand Any Codebase',
   description:
     'Upload your codebase and let IBM Bob, an enterprise AI agent, generate a deep-dive analysis of your project architecture, tech stack, security posture, and intent.',
   openGraph: {
-    title: 'dCode — Understand Any Codebase with IBM Bob',
+    title: 'CodeLens AI — Understand Any Codebase',
     description:
       'Enterprise AI code intelligence. Upload a codebase and get an instant architecture analysis.',
     images: [

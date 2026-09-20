@@ -8,7 +8,7 @@ interface UploadZoneProps {
   onFileSelected: (file: File) => void;
 }
 
-const ACCEPTED_TYPES = '.zip,.tar,.gz,application/zip,application/x-zip-compressed';
+const ACCEPTED_TYPES = '.zip,.json,.ts,.tsx,.js,.jsx,.css,.md,.sql,.py,.go,.java,application/zip,application/x-zip-compressed,text/plain,application/json';
 const MAX_SIZE = 50 * 1024 * 1024;
 
 export function UploadZone({ onFileSelected }: UploadZoneProps) {

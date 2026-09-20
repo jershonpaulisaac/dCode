@@ -7,9 +7,7 @@ import { Navbar } from '@/components/navbar';
 import { UploadZone } from '@/components/upload-zone';
 import { LoadingState } from '@/components/loading-state';
 import { Dashboard } from '@/components/dashboard';
-import { supabase } from '@/lib/supabase';
-import { mockAnalysisData } from '@/lib/mockData';
-import { recordToAnalysisData, type AnalysisData } from '@/lib/types';
+import type { AnalysisData } from '@/lib/types';
 
 type View = 'landing' | 'loading' | 'results';
 
@@ -17,66 +15,33 @@ export default function Home() {
   const [view, setView] = useState<View>('landing');
   const [fileName, setFileName] = useState('');
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileSelected = async (file: File) => {
     setFileName(file.name);
+    setError(null);
     setView('loading');
 
     try {
+      const formData = new FormData();
+      formData.append('file', file);
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis failed (${response.status})`);
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || `Live analysis failed (${response.status})`);
       }
 
       const data: AnalysisData = await response.json();
-
-      try {
-        await supabase.from('analyses').insert({
-          file_name: data.fileName,
-          file_size: data.fileSize,
-          summary: data.summary,
-          tech_stack: data.techStack,
-          architecture: data.architecture,
-          file_tree: data.fileTree,
-          executive_overview: data.executiveOverview ?? null,
-          security_findings: data.securityFindings ?? null,
-          api_endpoints: data.apiEndpoints ?? null,
-          tech_debt_metrics: data.techDebtMetrics ?? null,
-          recommended_refactor: data.recommendedRefactor ?? null,
-        });
-      } catch {
-        // Supabase persistence is best-effort; UI works without it
-      }
-
       setAnalysisData(data);
+      setView('results');
     } catch (error) {
       console.error('Analysis error:', error);
-      setAnalysisData({
-        ...mockAnalysisData,
-        fileName: file.name,
-        fileSize: file.size,
-      });
-    }
-  };
-
-  const handleLoadingComplete = () => {
-    if (analysisData) {
-      setView('results');
-    } else {
-      setAnalysisData({
-        ...mockAnalysisData,
-        fileName,
-        fileSize: 0,
-      });
-      setView('results');
+      setError(error instanceof Error ? error.message : 'Live analysis failed.');
+      setView('landing');
     }
   };
 
@@ -84,6 +49,7 @@ export default function Home() {
     setView('landing');
     setFileName('');
     setAnalysisData(null);
+    setError(null);
   };
 
   return (
@@ -113,8 +79,8 @@ export default function Home() {
               <h1 className="mb-4 font-sans text-4xl font-medium tracking-tight text-slate-100 sm:text-5xl md:text-6xl">
                 Understand Any Codebase.
                 <br />
-                <span className="text-slate-400">Powered by </span>
-                <span className="font-semibold text-slate-200">IBM Bob</span>
+                <span className="text-slate-400">Meet </span>
+                <span className="font-semibold text-slate-200">CodeLens AI</span>
               </h1>
               <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-500">
                 Upload your project and let our enterprise AI agent generate a
@@ -124,6 +90,11 @@ export default function Home() {
             </motion.div>
 
             <UploadZone onFileSelected={handleFileSelected} />
+            {error && (
+              <p className="mt-5 max-w-2xl text-center text-sm text-red-400" role="alert">
+                {error}
+              </p>
+            )}
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -147,7 +118,6 @@ export default function Home() {
           >
             <LoadingState
               fileName={fileName}
-              onComplete={handleLoadingComplete}
             />
           </motion.main>
         )}
@@ -161,7 +131,7 @@ export default function Home() {
 
       <footer className="fixed bottom-0 left-0 right-0 border-t border-slate-800/40 bg-slate-950/60 py-3 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 text-xs text-slate-600">
-          <span>dCode</span>
+          <span>CodeLens AI</span>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
