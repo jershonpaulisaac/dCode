@@ -156,18 +156,24 @@ export async function POST(request: Request) {
 
     const { tree, content } = await extractProject(uploadedFile);
     let bobResponse: Response;
+    
     try {
+      // 1. Updated fetch call for OpenAI compatibility
       bobResponse = await fetch(inferenceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: ['Bearer', bobApiKey].join(' '),
+          'Authorization': `Bearer ${bobApiKey}`,
           'X-Agent': 'CodeLens AI',
         },
         body: JSON.stringify({
-          prompt: buildBobPrompt(uploadedFile.name, tree, content),
-          model: 'bob-enterprise-latest',
-          response_format: { type: 'json_object' },
+          model: 'premium',
+          messages: [
+            {
+              role: 'user',
+              content: buildBobPrompt(uploadedFile.name, tree, content)
+            }
+          ]
         }),
       });
     } catch (error) {
@@ -184,7 +190,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `IBM Bob API returned status ${bobResponse.status}.` }, { status: 502 });
     }
 
-    const data = parseBobResponse(await bobResponse.json(), uploadedFile.name, uploadedFile.size);
+    const jsonResponse = await bobResponse.json();
+    
+    // 2. Parse the inner JSON from the AI's message content
+    let rawContent = jsonResponse;
+    if (jsonResponse.choices && jsonResponse.choices[0]?.message?.content) {
+        try {
+            let cleanedContent = jsonResponse.choices[0].message.content.trim();
+            // Remove markdown codeblock formatting if the AI added it
+            if (cleanedContent.startsWith('```json')) {
+                cleanedContent = cleanedContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+            } else if (cleanedContent.startsWith('```')) {
+                cleanedContent = cleanedContent.replace(/^```\n/, '').replace(/\n```$/, '');
+            }
+            rawContent = JSON.parse(cleanedContent);
+        } catch (e) {
+            console.error("Failed to parse nested JSON:", jsonResponse.choices[0].message.content);
+            return NextResponse.json({ error: 'IBM Bob returned malformed JSON content.' }, { status: 502 });
+        }
+    }
+
+    const data = parseBobResponse(rawContent, uploadedFile.name, uploadedFile.size);
     await persistAnalysis(data);
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
