@@ -133,6 +133,20 @@ export async function POST(request: Request) {
     if (!bobApiKey) {
       return NextResponse.json({ error: 'BOB_API_KEY is not configured.' }, { status: 503 });
     }
+    const bobApiUrl = process.env.BOB_API_URL;
+    if (!bobApiUrl) {
+      return NextResponse.json(
+        { error: 'BOB_API_URL is not configured. Set it to the reachable IBM Bob inference endpoint.' },
+        { status: 503 }
+      );
+    }
+
+    let inferenceUrl: URL;
+    try {
+      inferenceUrl = new URL(bobApiUrl);
+    } catch {
+      return NextResponse.json({ error: 'BOB_API_URL must be a valid absolute URL.' }, { status: 503 });
+    }
 
     const formData = await request.formData();
     const uploadedFile = formData.get('file');
@@ -141,19 +155,28 @@ export async function POST(request: Request) {
     }
 
     const { tree, content } = await extractProject(uploadedFile);
-    const bobResponse = await fetch('https://api.ibm-bob.example.com/v1/analyze', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: ['Bearer', bobApiKey].join(' '),
-        'X-Agent': 'CodeLens AI',
-      },
-      body: JSON.stringify({
-        prompt: buildBobPrompt(uploadedFile.name, tree, content),
-        model: 'bob-enterprise-latest',
-        response_format: { type: 'json_object' },
-      }),
-    });
+    let bobResponse: Response;
+    try {
+      bobResponse = await fetch(inferenceUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: ['Bearer', bobApiKey].join(' '),
+          'X-Agent': 'CodeLens AI',
+        },
+        body: JSON.stringify({
+          prompt: buildBobPrompt(uploadedFile.name, tree, content),
+          model: 'bob-enterprise-latest',
+          response_format: { type: 'json_object' },
+        }),
+      });
+    } catch (error) {
+      console.error('IBM Bob connection error:', error);
+      return NextResponse.json(
+        { error: 'Unable to reach the IBM Bob inference endpoint. Verify BOB_API_URL and network access.' },
+        { status: 502 }
+      );
+    }
 
     if (!bobResponse.ok) {
       const errorText = await bobResponse.text();
