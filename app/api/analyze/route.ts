@@ -166,7 +166,7 @@ export async function POST(request: Request) {
           'X-Agent': 'CodeLens AI',
         },
         body: JSON.stringify({
-          model: 'premium',
+          model: 'gemini-2.0-flash',
           messages: [
             {
               role: 'system',
