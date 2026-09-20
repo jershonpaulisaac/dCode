@@ -41,6 +41,40 @@ export interface TechDebtMetric {
   status: MetricStatus;
 }
 
+export type AdvancedMetricStatus = 'good' | 'warning' | 'critical';
+
+export interface AdvancedMetric {
+  label: 'AI Code Share' | 'Value Leak Detection' | 'Dependency & Licensing Risk';
+  value: number;
+  unit: '%' | 'findings' | 'packages';
+  description: string;
+  status: AdvancedMetricStatus;
+}
+
+export interface ArchitectureNode {
+  id: string;
+  label: string;
+  type: 'frontend' | 'backend' | 'database' | 'service' | 'external';
+  description: string;
+  connectsTo: string[];
+}
+
+export interface CodeMistake {
+  title: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  file: string;
+  line?: number;
+}
+
+export interface SecurityVulnerability {
+  title: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  file: string;
+  line?: number;
+}
+
 export interface CodeDiff {
   title: string;
   description: string;
@@ -61,6 +95,11 @@ export interface AnalysisData {
   securityFindings?: SecurityFinding[];
   apiEndpoints?: ApiEndpoint[];
   techDebtMetrics?: TechDebtMetric[];
+  advancedMetrics?: AdvancedMetric[];
+  architecture_nodes: ArchitectureNode[];
+  code_mistakes: CodeMistake[];
+  anti_patterns: CodeMistake[];
+  security_vulnerabilities: SecurityVulnerability[];
   recommendedRefactor?: CodeDiff;
   createdAt?: string;
 }
@@ -78,6 +117,11 @@ export interface AnalysisRecord {
   api_endpoints: ApiEndpoint[] | null;
   tech_debt_metrics: TechDebtMetric[] | null;
   recommended_refactor: CodeDiff | null;
+  advanced_metrics: AdvancedMetric[] | null;
+  architecture_nodes: ArchitectureNode[] | null;
+  code_mistakes: CodeMistake[] | null;
+  anti_patterns: CodeMistake[] | null;
+  security_vulnerabilities: SecurityVulnerability[] | null;
   created_at: string;
 }
 
@@ -94,6 +138,11 @@ export function recordToAnalysisData(rec: AnalysisRecord): AnalysisData {
     securityFindings: rec.security_findings ?? undefined,
     apiEndpoints: rec.api_endpoints ?? undefined,
     techDebtMetrics: rec.tech_debt_metrics ?? undefined,
+    advancedMetrics: rec.advanced_metrics ?? undefined,
+    architecture_nodes: rec.architecture_nodes ?? [],
+    code_mistakes: rec.code_mistakes ?? [],
+    anti_patterns: rec.anti_patterns ?? [],
+    security_vulnerabilities: rec.security_vulnerabilities ?? [],
     recommendedRefactor: rec.recommended_refactor ?? undefined,
     createdAt: rec.created_at,
   };

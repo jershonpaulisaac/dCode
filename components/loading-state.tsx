@@ -6,8 +6,6 @@ import { Terminal, Check } from 'lucide-react';
 
 interface LoadingStateProps {
   fileName: string;
-  onComplete: () => void;
-  duration?: number;
 }
 
 const STATUS_MESSAGES = [
@@ -19,31 +17,15 @@ const STATUS_MESSAGES = [
   'Drafting executive summary...',
 ];
 
-export function LoadingState({ fileName, onComplete, duration = 5000 }: LoadingStateProps) {
-  const [progress, setProgress] = useState(0);
+export function LoadingState({ fileName }: LoadingStateProps) {
   const [currentStatus, setCurrentStatus] = useState(0);
 
   useEffect(() => {
-    const startTime = Date.now();
     const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min((elapsed / duration) * 100, 100);
-      setProgress(pct);
-
-      const statusIndex = Math.min(
-        Math.floor((pct / 100) * STATUS_MESSAGES.length),
-        STATUS_MESSAGES.length - 1
-      );
-      setCurrentStatus(statusIndex);
-
-      if (pct >= 100) {
-        clearInterval(interval);
-        setTimeout(onComplete, 400);
-      }
-    }, 30);
-
+      setCurrentStatus((status) => (status + 1) % STATUS_MESSAGES.length);
+    }, 1800);
     return () => clearInterval(interval);
-  }, [duration, onComplete]);
+  }, []);
 
   return (
     <motion.div
@@ -63,26 +45,22 @@ export function LoadingState({ fileName, onComplete, duration = 5000 }: LoadingS
           />
         </div>
         <div className="text-left">
-          <p className="text-sm font-medium text-slate-200">IBM Bob is analyzing</p>
+          <p className="text-sm font-medium text-slate-200">CodeLens AI is analyzing</p>
           <p className="max-w-[200px] truncate text-xs text-slate-500">{fileName}</p>
         </div>
       </div>
 
       <div className="w-full">
         <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-          <span>Processing</span>
-          <span className="font-mono tabular-nums text-slate-300">
-            {Math.round(progress)}%
-          </span>
+          <span>Processing live response</span>
+          <span className="font-mono tabular-nums text-cyan-300">LIVE</span>
         </div>
         <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-slate-800">
           <motion.div
-            className="absolute left-0 top-0 h-full rounded-full bg-slate-300"
-            style={{ width: `${progress}%` }}
-            transition={{ ease: 'linear' }}
-          >
-            <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-r from-transparent to-slate-200/50 blur-sm" />
-          </motion.div>
+            className="absolute left-0 top-0 h-full w-1/3 rounded-full bg-cyan-300"
+            animate={{ x: ['-100%', '300%'] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          />
         </div>
       </div>
 
