@@ -27,25 +27,25 @@
   }
 
   .dark {
-    --background: 222 47% 7%;
+    --background: 0 0% 4%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 9%;
+    --card: 0 0% 5%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 9%;
+    --popover: 0 0% 5%;
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 14%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 217 33% 14%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 215 14% 48%;
+    --accent: 0 0% 8%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 16%;
-    --input: 217 33% 16%;
-    --ring: 215 25% 27%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 18%;
   }
 }
 
@@ -63,14 +63,14 @@
 }
 
 .dark {
-  --surface-base:    222 47% 4%;
-  --surface-raised:  222 47% 7%;
-  --surface-overlay: 217 33% 11%;
-  --text-primary:    210 40% 97%;
-  --text-secondary:  215 20% 65%;
-  --text-muted:      217 20% 42%;
-  --border-default:  217 33% 18%;
-  --border-subtle:   217 33% 14%;
+  --surface-base:    0 0% 4%;
+  --surface-raised:  0 0% 6%;
+  --surface-overlay: 0 0% 9%;
+  --text-primary:    0 0% 97%;
+  --text-secondary:  0 0% 60%;
+  --text-muted:      0 0% 38%;
+  --border-default:  0 0% 14%;
+  --border-subtle:   0 0% 10%;
   --accent-cyan:     194 100% 60%;
 }
 
@@ -79,15 +79,9 @@
     @apply border-border;
   }
   body {
-    background: hsl(var(--surface-base));
+    background: #09090b;
     color: hsl(var(--text-primary));
   }
-}
-
-/* ── Light mode explicit overrides for slate utilities ──────────────────── */
-.light body {
-  background: hsl(var(--surface-base));
-  color: hsl(var(--text-primary));
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────────────────── */
@@ -99,9 +93,4 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--text-muted));
-}
-
-/* ── Theme transition ────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.05s ease;
 }
