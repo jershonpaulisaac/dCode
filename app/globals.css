@@ -23,13 +23,9 @@
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 222 47% 11%;
-    --chart-1: 222 47% 30%;
-    --chart-2: 200 18% 46%;
-    --chart-3: 215 25% 27%;
-    --chart-4: 210 16% 65%;
-    --chart-5: 210 20% 38%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 222 47% 7%;
     --foreground: 210 40% 98%;
@@ -50,12 +46,32 @@
     --border: 217 33% 16%;
     --input: 217 33% 16%;
     --ring: 215 25% 27%;
-    --chart-1: 200 18% 55%;
-    --chart-2: 210 16% 45%;
-    --chart-3: 215 25% 27%;
-    --chart-4: 210 20% 65%;
-    --chart-5: 210 14% 38%;
   }
+}
+
+/* ── Semantic surface tokens ─────────────────────────────────────────────── */
+:root {
+  --surface-base:    0 0% 100%;
+  --surface-raised:  210 40% 98%;
+  --surface-overlay: 214 32% 96%;
+  --text-primary:    222 47% 11%;
+  --text-secondary:  215 25% 38%;
+  --text-muted:      215 16% 56%;
+  --border-default:  214 32% 88%;
+  --border-subtle:   214 32% 93%;
+  --accent-cyan:     194 100% 38%;
+}
+
+.dark {
+  --surface-base:    222 47% 4%;
+  --surface-raised:  222 47% 7%;
+  --surface-overlay: 217 33% 11%;
+  --text-primary:    210 40% 97%;
+  --text-secondary:  215 20% 65%;
+  --text-muted:      217 20% 42%;
+  --border-default:  217 33% 18%;
+  --border-subtle:   217 33% 14%;
+  --accent-cyan:     194 100% 60%;
 }
 
 @layer base {
@@ -63,21 +79,29 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    background: hsl(var(--surface-base));
+    color: hsl(var(--text-primary));
   }
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ── Light mode explicit overrides for slate utilities ──────────────────── */
+.light body {
+  background: hsl(var(--surface-base));
+  color: hsl(var(--text-primary));
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: hsl(217 33% 18%);
+  background: hsl(var(--border-default));
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(215 25% 30%);
+  background: hsl(var(--text-muted));
+}
+
+/* ── Theme transition ────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.05s ease;
 }

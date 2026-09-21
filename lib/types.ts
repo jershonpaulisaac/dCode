@@ -1,6 +1,12 @@
 export interface TechStackItem {
   name: string;
   category: 'language' | 'framework' | 'database' | 'tooling' | 'runtime' | 'library';
+  /** Number of files where this technology was detected */
+  fileCount?: number;
+  /** Percentage of total project files that reference this technology */
+  usagePct?: number;
+  /** Optional version string */
+  version?: string;
 }
 
 export interface ArchitectureMetric {
@@ -83,6 +89,16 @@ export interface CodeDiff {
   language: string;
 }
 
+export interface SetupCommand {
+  command: string;
+  description: string;
+}
+
+export interface EntryPoint {
+  path: string;
+  description: string;
+}
+
 export interface AnalysisData {
   id?: string;
   fileName: string;
@@ -91,6 +107,10 @@ export interface AnalysisData {
   techStack: TechStackItem[];
   architecture: ArchitectureMetric[];
   fileTree: string;
+  /** Map of file path → raw source content (for live preview) */
+  fileContents?: Record<string, string>;
+  setupCommands?: SetupCommand[];
+  entryPoints?: EntryPoint[];
   executiveOverview?: ExecutiveOverview;
   securityFindings?: SecurityFinding[];
   apiEndpoints?: ApiEndpoint[];
