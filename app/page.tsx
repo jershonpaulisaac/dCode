@@ -6,13 +6,11 @@ import { Navbar } from '@/components/navbar';
 import { UploadZone } from '@/components/upload-zone';
 import { LoadingState } from '@/components/loading-state';
 import { Dashboard } from '@/components/dashboard';
-import { useTheme } from '@/lib/theme-context';
 import type { AnalysisData } from '@/lib/types';
 
 type View = 'landing' | 'loading' | 'results';
 
 export default function Home() {
-  const { theme } = useTheme();
   const [view, setView] = useState<View>('landing');
   const [fileName, setFileName] = useState('');
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
@@ -66,7 +64,7 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'}`}>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
 
       <AnimatePresence mode="wait">
@@ -85,13 +83,13 @@ export default function Home() {
               transition={{ duration: 0.6, ease: 'easeOut' }}
               className="mb-12 text-center"
             >
-              <h1 className={`mb-4 font-sans text-4xl font-medium tracking-tight sm:text-5xl md:text-6xl ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
+              <h1 className="mb-4 font-sans text-4xl font-medium tracking-tight text-slate-100 sm:text-5xl md:text-6xl">
                 Understand Any Codebase.
                 <br />
-                <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Meet </span>
-                <span className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>CodeLens AI</span>
+                <span className="text-slate-400">Meet </span>
+                <span className="font-semibold text-slate-200">CodeLens AI</span>
               </h1>
-              <p className={`mx-auto max-w-xl text-base leading-relaxed ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
+              <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-500">
                 Upload a ZIP archive or paste a public GitHub URL to generate a
                 deep-dive analysis of architecture, tech stack, security
                 posture, and project intent in seconds.
@@ -112,12 +110,12 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className={`mt-16 flex items-center gap-6 text-xs ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}
+              className="mt-16 flex items-center gap-6 text-xs text-slate-600"
             >
               <span>ZIP archives</span>
-              <span className={`h-3 w-px ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
+              <span className="h-3 w-px bg-slate-800" />
               <span>GitHub URLs</span>
-              <span className={`h-3 w-px ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-200'}`} />
+              <span className="h-3 w-px bg-slate-800" />
               <span>Config files</span>
             </motion.div>
           </motion.main>

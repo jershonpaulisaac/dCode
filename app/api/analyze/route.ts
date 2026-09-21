@@ -160,6 +160,153 @@ function detectEntryPoints(fileList: string[], fileContents: Record<string, stri
   return points.slice(0, 10);
 }
 
+// ─── Rich dynamic tech-stack detector ────────────────────────────────────────
+// Returns TechStackItem[] with real fileCount and usagePct derived from the
+// actual repository file list and concatenated content blob.
+function detectTechStack(fileList: string[], content: string, fileContents: Record<string, string>): TechStackItem[] {
+  const total = Math.max(fileList.length, 1);
+
+  // Helper: count files matching a predicate
+  const countFiles = (pred: (f: string) => boolean) => fileList.filter(pred).length;
+  // Helper: count files whose content matches a pattern
+  const countContent = (pattern: RegExp) =>
+    Object.values(fileContents).filter(c => pattern.test(c)).length;
+
+  const detected: TechStackItem[] = [];
+
+  function push(
+    name: string,
+    category: TechStackItem['category'],
+    fileCount: number,
+    version?: string,
+  ) {
+    if (fileCount === 0) return;
+    const usagePct = Math.min(99, Math.round((fileCount / total) * 100));
+    detected.push({ name, category, fileCount, usagePct, version });
+  }
+
+  // ── Languages ────────────────────────────────────────────────────────────
+  const tsFiles = countFiles(f => f.endsWith('.ts') || f.endsWith('.tsx'));
+  const jsFiles = countFiles(f => (f.endsWith('.js') || f.endsWith('.jsx')) && !f.includes('node_modules') && !f.endsWith('.min.js'));
+  const pyFiles = countFiles(f => f.endsWith('.py'));
+  const goFiles = countFiles(f => f.endsWith('.go'));
+  const javaFiles = countFiles(f => f.endsWith('.java'));
+  const kotlinFiles = countFiles(f => f.endsWith('.kt'));
+  const swiftFiles = countFiles(f => f.endsWith('.swift'));
+  const phpFiles = countFiles(f => f.endsWith('.php'));
+  const rubyFiles = countFiles(f => f.endsWith('.rb'));
+  const rustFiles = countFiles(f => f.endsWith('.rs'));
+
+  push('TypeScript', 'language', tsFiles);
+  push('JavaScript', 'language', jsFiles);
+  push('Python', 'language', pyFiles);
+  push('Go', 'language', goFiles);
+  push('Java', 'language', javaFiles);
+  push('Kotlin', 'language', kotlinFiles);
+  push('Swift', 'language', swiftFiles);
+  push('PHP', 'language', phpFiles);
+  push('Ruby', 'language', rubyFiles);
+  push('Rust', 'language', rustFiles);
+
+  // ── Frameworks ───────────────────────────────────────────────────────────
+  const hasNextConfig = fileList.some(f => f.includes('next.config'));
+  const hasAppDir = fileList.some(f => /\/app\/(page|layout)\.(tsx|jsx|ts|js)/.test(f));
+  const hasPagesDir = fileList.some(f => /\/pages\//.test(f) && !f.includes('/__')) && !hasAppDir;
+  const reactFiles = countFiles(f => f.endsWith('.tsx') || f.endsWith('.jsx')) +
+    countContent(/from ['"]react['"]|require\(['"]react['"]\)/);
+
+  if (hasNextConfig || hasAppDir) {
+    const nextFileCnt = countFiles(f => f.includes('app/') || f.includes('next.config') || f.includes('next-env'));
+    push('Next.js App Router', 'framework', Math.max(nextFileCnt, hasNextConfig ? 3 : 0));
+  } else if (hasPagesDir) {
+    const nextFileCnt = countFiles(f => f.includes('pages/') || f.includes('next.config'));
+    push('Next.js', 'framework', Math.max(nextFileCnt, 2));
+  }
+
+  if (reactFiles > 0 && !hasNextConfig && !hasAppDir) {
+    push('React', 'framework', reactFiles);
+  } else if (reactFiles > 0) {
+    // React is part of Next.js stack — show separately
+    push('React', 'library', Math.min(reactFiles, total));
+  }
+
+  const vueFiles = countFiles(f => f.endsWith('.vue'));
+  if (vueFiles > 0) {
+    push('Vue', 'framework', vueFiles);
+  }
+
+  // Express
+  const expressFiles = countContent(/require\(['"]express['"]\)|from ['"]express['"]/);
+  push('Express', 'framework', expressFiles);
+
+  // Flask / Django / FastAPI
+  const flaskFiles = countContent(/from flask import|import flask/i);
+  const djangoFiles = countContent(/from django|import django|django\.conf/i);
+  const fastapiFiles = countContent(/from fastapi import|FastAPI\(\)/);
+  push('Flask', 'framework', flaskFiles);
+  push('Django', 'framework', djangoFiles);
+  push('FastAPI', 'framework', fastapiFiles);
+
+  // ── Runtimes ─────────────────────────────────────────────────────────────
+  const hasPkg = fileList.some(f => f.endsWith('package.json') && !f.includes('node_modules'));
+  const hasGoMod = fileList.some(f => f.endsWith('go.mod'));
+  if (hasPkg && (tsFiles + jsFiles) > 0) {
+    push('Node.js', 'runtime', countFiles(f => f.endsWith('.js') || f.endsWith('.ts')));
+  }
+  if (hasGoMod) {
+    push('Go', 'runtime', goFiles);
+  }
+
+  // ── Databases & data stores ───────────────────────────────────────────────
+  const supabaseFiles = countContent(/supabase|createClient/i) + countFiles(f => f.includes('supabase'));
+  const prismaFiles = countFiles(f => f.includes('prisma/') || f.endsWith('.prisma'));
+  const mongoFiles = countContent(/mongoose|mongodb|MongoClient/i);
+  const postgresFiles = countContent(/pg\.|postgres|postgresql|Pool\(|Client\(/i) + countFiles(f => f.includes('postgres'));
+  const redisFiles = countContent(/redis|ioredis/i) + countFiles(f => f.includes('redis'));
+  const sqliteFiles = countContent(/sqlite|better-sqlite/i) + countFiles(f => f.endsWith('.sqlite') || f.endsWith('.db'));
+
+  push('Supabase', 'database', supabaseFiles);
+  push('Prisma', 'database', prismaFiles);
+  push('MongoDB', 'database', mongoFiles);
+  push('PostgreSQL', 'database', postgresFiles && !supabaseFiles ? postgresFiles : 0);
+  push('Redis', 'database', redisFiles);
+  if (sqliteFiles > 0) detected.push({ name: 'SQLite', category: 'database', fileCount: sqliteFiles, usagePct: Math.min(99, Math.round((sqliteFiles / total) * 100)) });
+
+  // ── Tooling ──────────────────────────────────────────────────────────────
+  const tailwindFiles = countFiles(f => f.includes('tailwind')) + countContent(/tailwind|@apply/);
+  const eslintFiles = countFiles(f => f.includes('eslint') || f.includes('.eslintrc'));
+  const viteFiles = countFiles(f => f.includes('vite.config') || f.includes('vitest.config'));
+  const sassFiles = countFiles(f => f.endsWith('.scss') || f.endsWith('.sass'));
+  const dockerFiles = countFiles(f => f === 'Dockerfile' || f.includes('Dockerfile') || f.includes('docker-compose'));
+  const graphqlFiles = countFiles(f => f.endsWith('.graphql') || f.endsWith('.gql')) + countContent(/gql`|graphql\(`|GraphQL/);
+
+  push('Tailwind CSS', 'tooling', tailwindFiles);
+  push('ESLint', 'tooling', eslintFiles);
+  push('Vite', 'tooling', viteFiles);
+  push('Sass', 'tooling', sassFiles);
+  push('Docker', 'tooling', dockerFiles);
+  push('GraphQL', 'library', graphqlFiles);
+
+  // ── Fallback: ensure we always return something ───────────────────────────
+  if (detected.length === 0) {
+    detected.push(
+      { name: 'JavaScript', category: 'language', fileCount: 1, usagePct: 50 },
+      { name: 'Node.js', category: 'runtime', fileCount: 1, usagePct: 50 },
+    );
+  }
+
+  // Deduplicate by name, keeping the entry with higher fileCount
+  const byName = new Map<string, TechStackItem>();
+  for (const item of detected) {
+    const existing = byName.get(item.name);
+    if (!existing || (item.fileCount ?? 0) > (existing.fileCount ?? 0)) {
+      byName.set(item.name, item);
+    }
+  }
+
+  return Array.from(byName.values()).sort((a, b) => (b.fileCount ?? 0) - (a.fileCount ?? 0));
+}
+
 // Local Heuristic Analyzer (No API Required)
 function performLocalAnalysis(
   fileName: string,
@@ -168,17 +315,7 @@ function performLocalAnalysis(
   content: string,
   fileContents: Record<string, string>,
 ): AnalysisData {
-  const techStack: TechStackItem[] = [];
-  if (fileList.some(f => f.endsWith('.ts') || f.endsWith('.tsx'))) techStack.push({ name: 'TypeScript', category: 'language' });
-  if (fileList.some(f => f.endsWith('.js') || f.endsWith('.jsx'))) techStack.push({ name: 'JavaScript', category: 'language' });
-  if (fileList.some(f => f.includes('next.config') || fileList.some(f => f.includes('app/')))) techStack.push({ name: 'Next.js App Router', category: 'framework' });
-  if (fileList.some(f => f.includes('tailwind'))) techStack.push({ name: 'Tailwind CSS', category: 'tooling' });
-  if (fileList.some(f => f.includes('supabase') || content.includes('supabase'))) techStack.push({ name: 'Supabase', category: 'database' });
-  if (fileList.some(f => f.endsWith('.py'))) techStack.push({ name: 'Python', category: 'language' });
-
-  if (techStack.length === 0) {
-    techStack.push({ name: 'Node.js', category: 'runtime' }, { name: 'JavaScript', category: 'language' });
-  }
+  const techStack = detectTechStack(fileList, content, fileContents);
 
   const architectureNodes: ArchitectureNode[] = [
     { id: 'frontend', label: 'Client / UI Layer', type: 'frontend', description: 'User interface components and pages', connectsTo: ['backend'] },

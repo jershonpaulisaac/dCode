@@ -79,21 +79,107 @@ import {
   type ApiEndpoint,
 } from '@/lib/types';
 
-function detectTechStack(fileList: string[], content: string): TechStackItem[] {
-  const techStack: TechStackItem[] = [];
-  if (fileList.some(f => f.endsWith('.ts') || f.endsWith('.tsx'))) techStack.push({ name: 'TypeScript', category: 'language' });
-  if (fileList.some(f => f.endsWith('.js') || f.endsWith('.jsx'))) techStack.push({ name: 'JavaScript', category: 'language' });
-  if (fileList.some(f => f.includes('next.config') || f.includes('app/'))) techStack.push({ name: 'Next.js App Router', category: 'framework' });
-  if (fileList.some(f => f.includes('tailwind'))) techStack.push({ name: 'Tailwind CSS', category: 'tooling' });
-  if (fileList.some(f => f.includes('supabase')) || content.includes('supabase')) techStack.push({ name: 'Supabase', category: 'database' });
-  if (fileList.some(f => f.endsWith('.py'))) techStack.push({ name: 'Python', category: 'language' });
-  if (fileList.some(f => f.endsWith('.go'))) techStack.push({ name: 'Go', category: 'language' });
-  if (content.includes('"react"') || content.includes("'react'")) techStack.push({ name: 'React', category: 'framework' });
-  if (content.includes('"vue"') || content.includes("'vue'")) techStack.push({ name: 'Vue', category: 'framework' });
-  if (content.includes('"prisma"') || fileList.some(f => f.includes('prisma/'))) techStack.push({ name: 'Prisma', category: 'database' });
-  if (fileList.some(f => f.endsWith('go.mod'))) techStack.push({ name: 'Node.js', category: 'runtime' });
-  if (techStack.length === 0) techStack.push({ name: 'Node.js', category: 'runtime' }, { name: 'JavaScript', category: 'language' });
-  return techStack;
+function detectTechStack(fileList: string[], _content: string, fileContents: Record<string, string>): TechStackItem[] {
+  const total = Math.max(fileList.length, 1);
+  const countFiles = (pred: (f: string) => boolean) => fileList.filter(pred).length;
+  const countContent = (pattern: RegExp) => Object.values(fileContents).filter(c => pattern.test(c)).length;
+  const detected: TechStackItem[] = [];
+
+  function push(name: string, category: TechStackItem['category'], fileCount: number, version?: string) {
+    if (fileCount === 0) return;
+    const usagePct = Math.min(99, Math.round((fileCount / total) * 100));
+    detected.push({ name, category, fileCount, usagePct, version });
+  }
+
+  const tsFiles = countFiles(f => f.endsWith('.ts') || f.endsWith('.tsx'));
+  const jsFiles = countFiles(f => (f.endsWith('.js') || f.endsWith('.jsx')) && !f.includes('node_modules') && !f.endsWith('.min.js'));
+  const pyFiles = countFiles(f => f.endsWith('.py'));
+  const goFiles = countFiles(f => f.endsWith('.go'));
+  const javaFiles = countFiles(f => f.endsWith('.java'));
+  const kotlinFiles = countFiles(f => f.endsWith('.kt'));
+  const swiftFiles = countFiles(f => f.endsWith('.swift'));
+  const phpFiles = countFiles(f => f.endsWith('.php'));
+  const rubyFiles = countFiles(f => f.endsWith('.rb'));
+  const rustFiles = countFiles(f => f.endsWith('.rs'));
+
+  push('TypeScript', 'language', tsFiles);
+  push('JavaScript', 'language', jsFiles);
+  push('Python', 'language', pyFiles);
+  push('Go', 'language', goFiles);
+  push('Java', 'language', javaFiles);
+  push('Kotlin', 'language', kotlinFiles);
+  push('Swift', 'language', swiftFiles);
+  push('PHP', 'language', phpFiles);
+  push('Ruby', 'language', rubyFiles);
+  push('Rust', 'language', rustFiles);
+
+  const hasNextConfig = fileList.some(f => f.includes('next.config'));
+  const hasAppDir = fileList.some(f => /\/app\/(page|layout)\.(tsx|jsx|ts|js)/.test(f));
+  const hasPagesDir = fileList.some(f => /\/pages\//.test(f) && !f.includes('/__')) && !hasAppDir;
+  const reactFiles = countFiles(f => f.endsWith('.tsx') || f.endsWith('.jsx')) +
+    countContent(/from ['"]react['"]|require\(['"]react['"]\)/);
+
+  if (hasNextConfig || hasAppDir) {
+    const cnt = countFiles(f => f.includes('app/') || f.includes('next.config') || f.includes('next-env'));
+    push('Next.js App Router', 'framework', Math.max(cnt, hasNextConfig ? 3 : 0));
+  } else if (hasPagesDir) {
+    const cnt = countFiles(f => f.includes('pages/') || f.includes('next.config'));
+    push('Next.js', 'framework', Math.max(cnt, 2));
+  }
+
+  if (reactFiles > 0 && !hasNextConfig && !hasAppDir) push('React', 'framework', reactFiles);
+  else if (reactFiles > 0) push('React', 'library', Math.min(reactFiles, total));
+
+  const vueFiles = countFiles(f => f.endsWith('.vue'));
+  if (vueFiles > 0) push('Vue', 'framework', vueFiles);
+
+  push('Express', 'framework', countContent(/require\(['"]express['"]\)|from ['"]express['"]/));
+  push('Flask', 'framework', countContent(/from flask import|import flask/i));
+  push('Django', 'framework', countContent(/from django|import django|django\.conf/i));
+  push('FastAPI', 'framework', countContent(/from fastapi import|FastAPI\(\)/));
+
+  const hasPkg = fileList.some(f => f.endsWith('package.json') && !f.includes('node_modules'));
+  const hasGoMod = fileList.some(f => f.endsWith('go.mod'));
+  if (hasPkg && (tsFiles + jsFiles) > 0) push('Node.js', 'runtime', countFiles(f => f.endsWith('.js') || f.endsWith('.ts')));
+  if (hasGoMod && goFiles > 0) push('Go', 'runtime', goFiles);
+
+  const supabaseFiles = countContent(/supabase|createClient/i) + countFiles(f => f.includes('supabase'));
+  const prismaFiles = countFiles(f => f.includes('prisma/') || f.endsWith('.prisma'));
+  const mongoFiles = countContent(/mongoose|mongodb|MongoClient/i);
+  const postgresFiles = countContent(/pg\.|postgres|postgresql|Pool\(|Client\(/i) + countFiles(f => f.includes('postgres'));
+  const redisFiles = countContent(/redis|ioredis/i) + countFiles(f => f.includes('redis'));
+
+  push('Supabase', 'database', supabaseFiles);
+  push('Prisma', 'database', prismaFiles);
+  push('MongoDB', 'database', mongoFiles);
+  push('PostgreSQL', 'database', postgresFiles && !supabaseFiles ? postgresFiles : 0);
+  push('Redis', 'database', redisFiles);
+
+  const tailwindFiles = countFiles(f => f.includes('tailwind')) + countContent(/tailwind|@apply/);
+  const eslintFiles = countFiles(f => f.includes('eslint') || f.includes('.eslintrc'));
+  const viteFiles = countFiles(f => f.includes('vite.config') || f.includes('vitest.config'));
+  const sassFiles = countFiles(f => f.endsWith('.scss') || f.endsWith('.sass'));
+  const dockerFiles = countFiles(f => f === 'Dockerfile' || f.includes('Dockerfile') || f.includes('docker-compose'));
+  const graphqlFiles = countFiles(f => f.endsWith('.graphql') || f.endsWith('.gql')) + countContent(/gql`|graphql\(`|GraphQL/);
+
+  push('Tailwind CSS', 'tooling', tailwindFiles);
+  push('ESLint', 'tooling', eslintFiles);
+  push('Vite', 'tooling', viteFiles);
+  push('Sass', 'tooling', sassFiles);
+  push('Docker', 'tooling', dockerFiles);
+  push('GraphQL', 'library', graphqlFiles);
+
+  if (detected.length === 0) {
+    detected.push({ name: 'JavaScript', category: 'language', fileCount: 1, usagePct: 50 });
+    detected.push({ name: 'Node.js', category: 'runtime', fileCount: 1, usagePct: 50 });
+  }
+
+  const byName = new Map<string, TechStackItem>();
+  for (const item of detected) {
+    const existing = byName.get(item.name);
+    if (!existing || (item.fileCount ?? 0) > (existing.fileCount ?? 0)) byName.set(item.name, item);
+  }
+  return Array.from(byName.values()).sort((a, b) => (b.fileCount ?? 0) - (a.fileCount ?? 0));
 }
 
 function detectSetupCommandsFromTree(fileList: string[], fileContents: Record<string, string>): SetupCommand[] {
@@ -224,7 +310,7 @@ export async function POST(request: Request) {
     const fullContent = Object.values(fileContents).join('\n');
 
     // 3. Build analysis
-    const techStack = detectTechStack(fileList, fullContent);
+    const techStack = detectTechStack(fileList, fullContent, fileContents);
     const architectureNodes: ArchitectureNode[] = [
       { id: 'frontend', label: 'Client / UI Layer', type: 'frontend', description: 'User interface components and pages', connectsTo: ['backend'] },
       { id: 'backend', label: 'API & Route Handlers', type: 'backend', description: 'Server-side logic and endpoints', connectsTo: ['database'] },
